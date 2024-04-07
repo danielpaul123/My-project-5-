@@ -16,19 +16,16 @@ public class PlayerControls : MonoBehaviour
         float accelerationInput = Input.GetAxis("Vertical");
         float turnInput = Input.GetAxis("Horizontal");
 
-        // Acceleration
         if (accelerationInput > 0)
         {
             currentSpeed += acceleration * Time.deltaTime;
             currentSpeed = Mathf.Clamp(currentSpeed, 0f, maxSpeed);
         }
-        // Deceleration
         else if (accelerationInput < 0)
         {
             currentSpeed -= deceleration * Time.deltaTime;
             currentSpeed = Mathf.Clamp(currentSpeed, 0f, maxSpeed);
         }
-        // If no input, gradually slow down
         else
         {
             if (currentSpeed > 0)
@@ -40,7 +37,6 @@ public class PlayerControls : MonoBehaviour
 
         transform.Translate(Vector3.forward * currentSpeed * Time.deltaTime);
 
-        // Turning only if moving
         if (currentSpeed > 0)
         {
             float turn = turnInput * turnSpeed * Time.deltaTime;
