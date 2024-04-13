@@ -8,8 +8,15 @@ public class PlayerControls : MonoBehaviour
     public float acceleration = 2f;
     public float deceleration = 2f;
     public float turnSpeed = 3f;
+    public AudioClip accelerationSound;
 
     private float currentSpeed = 0f;
+    private AudioSource audioSource;
+
+    void Start()
+    {
+        audioSource = GetComponent<AudioSource>();
+    }
 
     void Update()
     {
@@ -20,6 +27,12 @@ public class PlayerControls : MonoBehaviour
         {
             currentSpeed += acceleration * Time.deltaTime;
             currentSpeed = Mathf.Clamp(currentSpeed, 0f, maxSpeed);
+
+            // Play acceleration sound
+            if (!audioSource.isPlaying && accelerationSound != null)
+            {
+                audioSource.PlayOneShot(accelerationSound);
+            }
         }
         else if (accelerationInput < 0)
         {

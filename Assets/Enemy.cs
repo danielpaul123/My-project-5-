@@ -126,8 +126,8 @@ public class AIWaypoints : MonoBehaviour
         enabled = false;
 
         // Countdown before AI car starts moving
-        int countdownValue = 3;
-        while (countdownValue > 0)
+        int countdownValue = 1;
+        while (countdownValue >= 0)
         {
             countdownText.text = countdownValue.ToString();
             yield return new WaitForSeconds(1f);
