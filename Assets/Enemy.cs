@@ -1,4 +1,4 @@
-using System.Collections;
+/*using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
@@ -66,5 +66,138 @@ public class Enemy : MonoBehaviour
     public void SetTargetDestination(Transform destination)
     {
         targetDestination = destination;
+    }
+}*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+using UnityEngine;
+using System.Collections;
+using UnityEngine.UI;
+
+public class AIWaypoints : MonoBehaviour
+{
+    public Transform[] waypoints;
+    public float maxSpeed = 5f;
+    public float acceleration = 1f; // Rate of acceleration
+    public float turnSpeed = 5f;
+    public float minDistanceToWaypoint = 0.1f;
+    private int currentWaypointIndex = 0;
+    private float currentSpeed = 0f;
+
+    public Text countdownText; // Reference to the UI text element for countdown
+
+    // Wheel variables
+    public Transform[] wheelTransforms;
+    public WheelCollider[] wheelColliders;
+
+    private void Start()
+    {
+        StartCoroutine(CountdownAndStartMovement());
+
+        // Initialize wheel colliders and transforms
+        InitializeWheels();
+    }
+
+    private void InitializeWheels()
+    {
+        // Assign wheel colliders and transforms
+        for (int i = 0; i < wheelTransforms.Length; i++)
+        {
+            wheelColliders[i] = wheelTransforms[i].GetComponentInChildren<WheelCollider>();
+        }
+    }
+
+    private IEnumerator CountdownAndStartMovement()
+    {
+        // Disable AI movement during countdown
+        enabled = false;
+
+        // Countdown before AI car starts moving
+        int countdownValue = 3;
+        while (countdownValue > 0)
+        {
+            countdownText.text = countdownValue.ToString();
+            yield return new WaitForSeconds(1f);
+            countdownValue--;
+        }
+        countdownText.text = "GO!";
+
+        // Enable AI movement after countdown
+        enabled = true;
+    }
+
+    private void Update()
+    {
+        if (enabled)
+        {
+            MoveToWaypoint();
+            UpdateWheelPoses();
+        }
+    }
+
+    private void MoveToWaypoint()
+    {
+        if (currentWaypointIndex >= waypoints.Length)
+            return;
+
+        Vector3 targetPosition = waypoints[currentWaypointIndex].position;
+        Vector3 moveDirection = (targetPosition - transform.position).normalized;
+
+        // Smooth rotation towards the target direction
+        Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
+        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, turnSpeed * Time.deltaTime);
+
+        // Accelerate until reaching max speed
+        if (currentSpeed < maxSpeed)
+        {
+            currentSpeed += acceleration * Time.deltaTime;
+        }
+        else
+        {
+            currentSpeed = maxSpeed;
+        }
+
+        // Move the car forward at the current speed
+        transform.position += transform.forward * currentSpeed * Time.deltaTime;
+
+        if (Vector3.Distance(transform.position, targetPosition) < minDistanceToWaypoint)
+        {
+            SetNextWaypoint();
+        }
+    }
+
+    private void SetNextWaypoint()
+    {
+        currentWaypointIndex++;
+        if (currentWaypointIndex >= waypoints.Length)
+        {
+            enabled = false;
+        }
+    }
+
+    private void UpdateWheelPoses()
+    {
+        // Update visual wheel transforms based on wheel colliders
+        for (int i = 0; i < wheelTransforms.Length; i++)
+        {
+            Quaternion rot;
+            Vector3 pos;
+            wheelColliders[i].GetWorldPose(out pos, out rot);
+            wheelTransforms[i].position = pos;
+            wheelTransforms[i].rotation = rot * Quaternion.Euler(0, 0, 90); // Adjust rotation as needed
+        }
     }
 }
