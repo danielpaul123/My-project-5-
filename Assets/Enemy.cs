@@ -16,25 +16,16 @@ public class Enemy : MonoBehaviour
 
     private float currentSpeed = 0f;
     private Rigidbody rb;
-    private NavMeshAgent agent;
     private float pickupEffectTimer = 0f;
 
     void Start()
     {
         rb = GetComponent<Rigidbody>();
-        agent = GetComponent<NavMeshAgent>();
         currentSpeed = 0f;
-        agent.speed = maxSpeed;
-
-        if (targetDestination != null)
-        {
-            SetTargetDestination(targetDestination.position);
-        }
     }
 
     void FixedUpdate()
     {
-
         if (pickupEffectTimer > 0f)
         {
             currentSpeed += pickupSpeedIncrease * Time.deltaTime;
@@ -42,27 +33,26 @@ public class Enemy : MonoBehaviour
         }
         else
         {
-
             currentSpeed += acceleration * Time.deltaTime;
         }
 
         currentSpeed = Mathf.Clamp(currentSpeed, 0f, maxSpeed);
 
-
+        // Apply forward movement
         rb.MovePosition(transform.position + transform.forward * currentSpeed * Time.deltaTime);
 
+        // Calculate rotation amount based on desired direction
+        Vector3 desiredDirection = (targetDestination.position - transform.position).normalized;
+        float rotationAmount = Vector3.SignedAngle(transform.forward, desiredDirection, Vector3.up);
 
-        Vector3 desiredVelocity = agent.velocity;
+        // Apply rotation
+        Quaternion targetRotation = Quaternion.LookRotation(desiredDirection, Vector3.up);
+        rb.MoveRotation(Quaternion.RotateTowards(transform.rotation, targetRotation, turnSpeed * Time.deltaTime));
 
-        float horizontalInput = Mathf.Sign(Vector3.Dot(transform.right, Vector3.Cross(transform.forward, desiredVelocity)));
-        float rotationAmount = horizontalInput * turnSpeed;
-
-
-        transform.Rotate(Vector3.up, rotationAmount);
-
+        // Rotate wheels
         foreach (Transform wheelTransform in wheelTransforms)
         {
-            wheelTransform.Rotate(Vector3.right, rotationAmount * wheelRotationMultiplier);
+            wheelTransform.Rotate(Vector3.right, rotationAmount * Time.deltaTime * wheelRotationMultiplier);
         }
     }
 
@@ -72,13 +62,9 @@ public class Enemy : MonoBehaviour
         pickupEffectTimer = pickupEffectDuration;
     }
 
-
-    public void SetTargetDestination(Vector3 destination)
+    // Method to set target destination
+    public void SetTargetDestination(Transform destination)
     {
-        if (agent != null)
-        {
-            agent.SetDestination(destination);
-        }
+        targetDestination = destination;
     }
-
 }
